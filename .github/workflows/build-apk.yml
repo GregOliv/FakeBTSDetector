@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    name: Build Debug APK
+    name: Build Debug APK and Run Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -30,6 +30,9 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '8.4'
+
+      - name: Run Unit and Replay Tests
+        run: gradle testDebugUnitTest --stacktrace
 
       - name: Build Debug APK
         run: gradle assembleDebug --stacktrace

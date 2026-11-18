@@ -5,12 +5,26 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
+import id.antifakebts.detector.di.appModule
+import org.koin.android.ext.koin.androidContext
+import org.koin.android.ext.koin.androidLogger
+import org.koin.core.context.startKoin
+import org.koin.core.logger.Level
 
 class FakeBtsApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        initKoin()
         createNotificationChannels()
+    }
+
+    private fun initKoin() {
+        startKoin {
+            androidLogger(Level.ERROR)
+            androidContext(this@FakeBtsApplication)
+            modules(appModule)
+        }
     }
 
     private fun createNotificationChannels() {
