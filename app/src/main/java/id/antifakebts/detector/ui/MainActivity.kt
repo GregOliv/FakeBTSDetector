@@ -833,3 +833,293 @@ fun SettingsScreen(
 }
 
 data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
+
+@Composable
+fun ServiceControlCard(
+    isServiceRunning: Boolean,
+    onStart: () -> Unit,
+    onStop: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isServiceRunning) Color(0xFFE8F5E9) else Color(0xFFFFEBEE)
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(12.dp)
+                        .background(
+                            color = if (isServiceRunning) Color(0xFF2E7D32) else Color(0xFFC62828),
+                            shape = CircleShape
+                        )
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Column {
+                    Text(
+                        text = if (isServiceRunning) "Status: Memantau" else "Status: Berhenti",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = Color.Black
+                    )
+                    Text(
+                        text = if (isServiceRunning) "Foreground Service Aktif" else "Tekan mulai untuk inspeksi",
+                        fontSize = 12.sp,
+                        color = Color.DarkGray
+                    )
+                }
+            }
+
+            if (isServiceRunning) {
+                OutlinedButton(
+                    onClick = onStop,
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFC62828))
+                ) {
+                    Icon(Icons.Default.Stop, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Hentikan")
+                }
+            } else {
+                Button(
+                    onClick = onStart,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B5E20))
+                ) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Mulai")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ServingCellCard(cell: CellObservation?, isServiceRunning: Boolean) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.CellTower,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Sel Seluler Aktif (Serving Cell)",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            if (!isServiceRunning) {
+                Text(
+                    text = "Layanan pemantauan sedang tidak aktif. Aktifkan layanan di atas untuk melihat data seluler.",
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else if (cell == null) {
+                Text(
+                    text = "Menunggu sinyal radio seluler dari modem HP...",
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                InfoRow("Operator / PLMN", "${cell.operatorAlpha ?: "-"} (${cell.plmn ?: "-"})")
+                InfoRow("Teknologi Jaringan", cell.networkType.displayName)
+                InfoRow("Cell ID (CID / NCI)", cell.getDisplayCellId())
+                InfoRow("Area Code (TAC / LAC)", cell.getDisplayTac())
+                InfoRow("Kekuatan Sinyal", cell.signalDbm?.let { "$it dBm" } ?: "Tidak Terbaca")
+                cell.signalRsrp?.let {
+                    InfoRow("RSRP (LTE/5G)", "$it dBm")
+                }
+                cell.channelNumber?.let {
+                    InfoRow("Saluran Frekuensi", it.toString())
+                }
+                cell.physicalCellId?.let {
+                    InfoRow("Physical Cell ID (PCI)", it.toString())
+                }
+                InfoRow("Sel Tetangga Terdeteksi", "${cell.neighborCount} sel")
+                cell.latitude?.let { lat ->
+                    cell.longitude?.let { lon ->
+                        InfoRow("Koordinat Kasar", "%.4f, %.4f".format(lat, lon))
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SystemMetricsCard(
+    totalObservations: Int,
+    totalLearned: Int,
+    totalAlerts: Int
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "Statistik Penyimpanan Lokal (Room)",
+                fontWeight = FontWeight.Bold,
+                fontSize = 15.sp
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                MetricColumn("Total Observasi", totalObservations.toString())
+                MetricColumn("Sel Normal Terdata", totalLearned.toString())
+                MetricColumn("Peringatan Anomali", totalAlerts.toString())
+            }
+        }
+    }
+}
+
+@Composable
+fun MetricColumn(label: String, value: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(text = value, fontWeight = FontWeight.Bold, fontSize = 20.sp, color = MaterialTheme.colorScheme.primary)
+        Text(text = label, fontSize = 11.sp, color = Color.Gray)
+    }
+}
+
+@Composable
+fun NeighborCellRow(cell: CellObservation) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = "${cell.networkType.name} | CID: ${cell.getDisplayCellId()}",
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 13.sp
+                )
+                Text(
+                    text = "TAC/LAC: ${cell.getDisplayTac()} | PCI: ${cell.physicalCellId ?: "-"}",
+                    fontSize = 11.sp,
+                    color = Color.DarkGray
+                )
+            }
+            Text(
+                text = cell.signalDbm?.let { "$it dBm" } ?: "-",
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 13.sp,
+                fontFamily = FontFamily.Monospace
+            )
+        }
+    }
+}
+
+@Composable
+fun InfoRow(label: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 3.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(text = label, fontSize = 13.sp, color = Color.Gray)
+        Text(text = value, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+@Composable
+fun PermissionNoticeCard(onRequestPermissions: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0))
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Warning, contentDescription = null, tint = Color(0xFFE65100))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Izin Diperlukan",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp,
+                    color = Color(0xFFE65100)
+                )
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = "Android mewajibkan izin Lokasi Presisi dan Status Telepon untuk membaca identitas Cell ID dan sinyal radio seluler.",
+                fontSize = 12.sp,
+                color = Color.Black
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            Button(
+                onClick = onRequestPermissions,
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFE65100))
+            ) {
+                Text("Berikan Izin")
+            }
+        }
+    }
+}
+
+fun checkAllPermissions(context: Context): Boolean {
+    val fineLocation = ContextCompat.checkSelfPermission(
+        context,
+        Manifest.permission.ACCESS_FINE_LOCATION
+    ) == PackageManager.PERMISSION_GRANTED
+
+    val phoneState = ContextCompat.checkSelfPermission(
+        context,
+        Manifest.permission.READ_PHONE_STATE
+    ) == PackageManager.PERMISSION_GRANTED
+
+    val notifications = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.POST_NOTIFICATIONS
+        ) == PackageManager.PERMISSION_GRANTED
+    } else true
+
+    return fineLocation && phoneState && notifications
+}
+
+fun getRequiredPermissions(): Array<String> {
+    val list = mutableListOf(
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_COARSE_LOCATION,
+        Manifest.permission.READ_PHONE_STATE
+    )
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        list.add(Manifest.permission.POST_NOTIFICATIONS)
+    }
+    return list.toTypedArray()
+}
+
