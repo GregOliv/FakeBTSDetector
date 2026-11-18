@@ -11,8 +11,7 @@ class HysteresisTracker(
     fun computeLevel(
         rawScore: Int,
         categoryCount: Int,
-        isPersistent: Boolean,
-        timestamp: Long
+        isPersistent: Boolean
     ): AnomalyLevel {
         // Core anti false-positive rule: HIGH risk strictly requires >= 2 distinct categories
         val canBeHigh = categoryCount >= 2 && isPersistent

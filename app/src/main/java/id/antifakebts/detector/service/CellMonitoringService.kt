@@ -54,6 +54,7 @@ class CellMonitoringService : Service() {
     private var telephonyManager: TelephonyManager? = null
 
     private var telephonyCallbackApi31: Any? = null
+    @Suppress("DEPRECATION")
     private var phoneStateListenerApi29: PhoneStateListener? = null
 
     override fun onBind(intent: Intent?): IBinder? = null

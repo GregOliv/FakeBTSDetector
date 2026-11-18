@@ -45,19 +45,19 @@ class RuleEngineTest {
             PlmnMismatchRule(simPlmnProvider = { "51010" }, defaultWeight = 35)
         )
 
-        // Install date 30 days ago to test full non-learning mode behavior
-        val pastInstallTime = System.currentTimeMillis() - (30L * 24 * 60 * 60 * 1000)
+        val testConfig = RuleEngineConfig(
+            highRiskThresholdScore = 65,
+            mediumRiskThresholdScore = 35,
+            lowRiskThresholdScore = 15,
+            learningModeDays = 0
+        )
         ruleEngine = RuleEngine(
             rules = rules,
             movementEvaluator = MovementContextEvaluator(),
             persistenceFilter = PersistenceFilter(requiredConsecutiveReadings = 1, requiredDurationSeconds = 1),
-            hysteresisTracker = HysteresisTracker(),
-            config = RuleEngineConfig(
-                highRiskThresholdScore = 65,
-                mediumRiskThresholdScore = 35,
-                lowRiskThresholdScore = 15
-            ),
-            appInstallTimestampProvider = { pastInstallTime }
+            hysteresisTracker = HysteresisTracker(testConfig),
+            config = testConfig,
+            appInstallTimestampProvider = { 0L }
         )
     }
 

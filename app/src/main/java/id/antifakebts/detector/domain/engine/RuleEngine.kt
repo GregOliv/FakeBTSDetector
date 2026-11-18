@@ -24,10 +24,11 @@ class RuleEngine(
     private val rules: List<CellularRule>,
     private val movementEvaluator: MovementContextEvaluator = MovementContextEvaluator(),
     private val persistenceFilter: PersistenceFilter = PersistenceFilter(),
-    private val hysteresisTracker: HysteresisTracker = HysteresisTracker(),
+    hysteresisTracker: HysteresisTracker? = null,
     private val config: RuleEngineConfig = RuleEngineConfig(),
     private val appInstallTimestampProvider: () -> Long = { System.currentTimeMillis() }
 ) {
+    private val hysteresisTracker: HysteresisTracker = hysteresisTracker ?: HysteresisTracker(config)
 
     suspend fun evaluate(
         current: CellObservation,
@@ -59,17 +60,18 @@ class RuleEngine(
         val isSuspicious = rawScore >= config.lowRiskThresholdScore
         val isPersistent = persistenceFilter.recordEvaluation(isSuspicious, now)
 
-        val computedLevel = hysteresisTracker.computeLevel(
+        val computedLevel = this.hysteresisTracker.computeLevel(
             rawScore = rawScore,
             categoryCount = distinctCategories.size,
-            isPersistent = isPersistent,
-            timestamp = now
+            isPersistent = isPersistent
         )
 
         // Check learning mode (shadow mode for first N days)
         val installTime = appInstallTimestampProvider()
-        val daysSinceInstall = (now - installTime) / (24 * 60 * 60 * 1000L)
-        val isLearningModeActive = daysSinceInstall < config.learningModeDays
+        val elapsedMillis = now - installTime
+        val isLearningModeActive = config.learningModeDays > 0 &&
+            elapsedMillis >= 0L &&
+            elapsedMillis < (config.learningModeDays * 24L * 60L * 60L * 1000L)
 
         // In learning mode, high alerts are suppressed to shadow log
         val effectiveLevel = if (isLearningModeActive && computedLevel == AnomalyLevel.HIGH) {

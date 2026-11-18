@@ -44,17 +44,20 @@ class ReplayEngineTest {
             PlmnMismatchRule(simPlmnProvider = { "51010" }, defaultWeight = 35)
         )
 
+        val testConfig = RuleEngineConfig(
+            highRiskThresholdScore = 65,
+            mediumRiskThresholdScore = 35,
+            lowRiskThresholdScore = 15,
+            alertCooldownSeconds = 300,
+            learningModeDays = 0
+        )
+
         ruleEngine = RuleEngine(
             rules = rules,
             movementEvaluator = MovementContextEvaluator(),
             persistenceFilter = PersistenceFilter(requiredConsecutiveReadings = 3, requiredDurationSeconds = 10),
-            hysteresisTracker = HysteresisTracker(),
-            config = RuleEngineConfig(
-                highRiskThresholdScore = 65,
-                mediumRiskThresholdScore = 35,
-                lowRiskThresholdScore = 15,
-                alertCooldownSeconds = 300
-            ),
+            hysteresisTracker = HysteresisTracker(testConfig),
+            config = testConfig,
             appInstallTimestampProvider = { 0L }
         )
     }
