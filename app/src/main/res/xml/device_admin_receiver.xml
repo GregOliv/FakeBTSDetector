@@ -1,0 +1,4 @@
+<device-admin xmlns:android="http://schemas.android.com/apk/res/android">
+    <support-device-admin />
+    <uses-policies />
+</device-admin>

@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">FakeBTS Detector</string>
+    <string name="notification_channel_status">Status Pengawasan Jaringan</string>
+    <string name="notification_channel_status_desc">Menampilkan status pemantauan seluler secara terus menerus.</string>
+    <string name="notification_channel_alerts">Peringatan Anomali Jaringan</string>
+    <string name="notification_channel_alerts_desc">Pemberitahuan ketika terdeteksi indikasi anomali seluler.</string>
+    <string name="device_admin_description">Memberikan otorisasi kebijakan perangkat untuk mitigasi otomatis seperti pembatasan sementara 2G dan SMS ketika terdeteksi ancaman berisiko tinggi.</string>
+</resources>
