@@ -17,7 +17,16 @@ class HysteresisTracker(
         val canBeHigh = categoryCount >= 2 && isPersistent
 
         val nextLevel = when (currentLevel) {
-            AnomalyLevel.SAFE, AnomalyLevel.LOW -> {
+            AnomalyLevel.SAFE -> {
+                when {
+                    rawScore >= config.highRiskThresholdScore && canBeHigh -> AnomalyLevel.HIGH
+                    rawScore >= config.mediumRiskThresholdScore && isPersistent -> AnomalyLevel.MEDIUM
+                    rawScore >= config.lowRiskThresholdScore && isPersistent -> AnomalyLevel.LOW
+                    else -> AnomalyLevel.SAFE
+                }
+            }
+
+            AnomalyLevel.LOW -> {
                 when {
                     rawScore >= config.highRiskThresholdScore && canBeHigh -> AnomalyLevel.HIGH
                     rawScore >= config.mediumRiskThresholdScore && isPersistent -> AnomalyLevel.MEDIUM
